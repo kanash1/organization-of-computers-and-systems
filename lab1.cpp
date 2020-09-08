@@ -75,11 +75,11 @@ int main() {
     cout << "Enter float: ";
     cin >> numF.val;
     Print(1, numF.aux);
-    ChangeBit(numF.aux);
+    ChangeBit(1, numF.aux);
     cout << "Enter unsigned char: ";
     cin >> numUC;
     Print(0, numUC);
-    ChangeBit(numUC);
+    ChangeBit(0, numUC);
 
 
     return 0;
