@@ -27,6 +27,7 @@ void Print(bool state, int valInt = 0, unsigned char valUC = 0) {
             cout << ((valUC >> i) & 1);
     }
     cout << endl;
+    ClearStr();
 }
 
 void CheckSignBit(int NumberBit, char* Check)
@@ -369,7 +370,7 @@ float getFloatValue() {
                         str[i] != '+' && str[i] != '-' &&
                         str[i] != '.') {
                         flag = true;
-                        cout << "That input is invalid. Try again...";
+                        cout << "That input is invalid! Try again...";
                         ClearStr();
                     }
                 }
@@ -388,30 +389,45 @@ float getFloatValue() {
     return val;
 }
 
+bool getChoice() {
+    char choice[3];
+    bool flag;
+    do {
+        flag = false;
+        cout << "What type of value do you need?" << endl;
+        cout << "Enter 0, if unsigned char, or 1, if float: ";
+        fgets(choice, 3, stdin);
+        fflush(stdin);
+        if (choice[0] == '\n') {
+            flag = true;
+            cout << "You entered an empty string! Try again...";
+            ClearStr();
+        }
+        else if (choice[2] != '\n' || (choice[1] != '0' && choice[1] != '1')) {
+            flag = true;
+            cout << "That input is invalid! Try again...";
+            ClearStr();
+        }
+    } while(flag);
+
+    return (bool)(choice[0] - '0');
+}
+
 int main() {
-    unsigned char valUChar;
-    special_float valFloat;
-    special_float val;
-    bool state;
-    cout << "What type of value do you need?" << endl;
-    cout << "Enter 0, if unsigned char, or 1, if float: ";
-    cin >> state;
+    unsigned char valUChar; // char value
+    special_float valFloat; // float and int union value
+    bool state;             // user choice
+
+    state = getChoice();    // user make choice
+
     if (state) {
-        cin >> val.actual;
-        cout << val.actual << endl;
-        val.actual = val.actual;
-        while (getchar() != '\n');
-        valFloat.actual = getFloatValue();
-        valFloat.actual = valFloat.actual;
-        Print(state, val.auxiliary);
-        Print(state, valFloat.auxiliary);
-        ClearStr();
-        ChangeBit(state, valFloat.auxiliary);
+        valFloat.actual = getFloatValue();      
+        Print(state, valFloat.auxiliary); 
+        ChangeBit(state, valFloat.auxiliary); 
     }
     else {
         valUChar = UnsCharCheck();
         Print(state, 0, valUChar);
-        ClearStr();
         ChangeBit(state, 0, valUChar);
     }
 
