@@ -2,6 +2,7 @@
 #include <conio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #define MAX 80
 using namespace std;
 
@@ -32,22 +33,32 @@ void Print(bool state, int valInt = 0, unsigned char valUC = 0) {
 
 void CheckSignBit(int NumberBit, char* Check)
 {
+    int len = 0;
     bool Flag;
 
     do
     {
+        len = 0;
         Flag = false;
-        cout << "Enter the bit sequence: ";
+        cout << "Enter a bit sequence of length " << NumberBit << ": ";
         fgets(Check, NumberBit + 2, stdin);
         fflush(stdin);
+        for (int i = 0; Check[i] != '\n' && Check[i]; ++i, ++len);
+        Check[len] = 0;
         system("cls");
-        if (Check[0] == '\n')
+        if (Check[0] == 0)
         {
             cout << "You entered an empty string! Try again..." << endl;
             ClearStr();
             Flag = true;
         }
-        else if (Check[NumberBit] != '\n')
+        else if (len < NumberBit)
+        {
+            cout << "The sequence of bits shorter then " << NumberBit << "! Try again..." << endl;
+            ClearStr();
+            Flag = true;
+        }
+        else if (len > NumberBit)
         {
             cout << "The sequence of bits longer then " << NumberBit << "! Try again..." << endl;
             ClearStr();
@@ -55,7 +66,6 @@ void CheckSignBit(int NumberBit, char* Check)
         }
         else
         {
-            Check[NumberBit] = '\0';
             for (int i = 0; i < NumberBit && !Flag; ++i)
             {
                 if (Check[i] != '0' && Check[i] != '1')
@@ -79,7 +89,7 @@ int CheckHighBit(bool state, int NumberBit)
     Flag = 0;
     while (Flag == 0)
     {
-        cout << "Enter the highest bit: ";
+        cout << "Enter the highest bit between " << NumberBit - 1 << " and " << MaxPos << ": ";
         fgets(Check, MAX, stdin);
         fflush(stdin);
         system("cls");
@@ -88,7 +98,7 @@ int CheckHighBit(bool state, int NumberBit)
             cout << "You entered an empty string! Try again..." << endl;
             ClearStr();
         }
-        else if (Check[1] != '\n' && Check[1 + state] != '\n' || atoi(Check) < NumberBit - 1)
+        else if (Check[1] != '\n' && Check[1 + state] != '\n' || atoi(Check) < NumberBit - 1 || atoi(Check) > MaxPos)
         {
             cout << "The highest bit is a number from " << NumberBit - 1 << " to " << MaxPos << "! Try again..." << endl;
             ClearStr();
@@ -108,7 +118,7 @@ int CheckNumberBit(bool state)
     Flag = 0;
     while (Flag == 0)
     {
-        cout << "Enter the number of bits: ";
+        cout << "Enter the number of bits between 1 and " << MaxBits << ": ";
         fgets(Check, MAX, stdin);
         fflush(stdin);
         system("cls");
@@ -131,19 +141,26 @@ int CheckNumberBit(bool state)
 void ChangeBit(bool state, int valInt = 0, unsigned char valUC = 0) {
 
     char SignBit[MAX];
-    int NumberBit, HighBit;
+    int NumberBit, HighBit, MaxBits;
+    MaxBits = (state) ? 32 : 8;
 
     NumberBit = CheckNumberBit(state);
-    HighBit = CheckHighBit(state, NumberBit);
+    if (NumberBit != MaxBits)
+        HighBit = CheckHighBit(state, NumberBit);
+    else
+        HighBit = NumberBit - 1;
     CheckSignBit(NumberBit, SignBit);
 
     if (state) {
+        special_float tmp;
         for (int i = 0; i < NumberBit; ++i) {
             if (SignBit[i] == '1')
                 valInt |= (1 << (HighBit - i));
             else
                 valInt &= ~(1 << (HighBit - i));
         }
+        tmp.auxiliary = valInt;
+        cout << tmp.actual << endl;
         Print(state, valInt);
     }
     else {
@@ -153,6 +170,7 @@ void ChangeBit(bool state, int valInt = 0, unsigned char valUC = 0) {
             else
                 valUC &= ~(1 << (HighBit - i));
         }
+        cout << valUC << endl;
         Print(state, 0, valUC);
     }
 }
@@ -184,7 +202,7 @@ char UnsCharCheck()
     return Check[0];
 }
 
-/*float getFloatValue() {
+float getFloatValue() {
 
     bool
         errorFlag = false,
@@ -200,8 +218,9 @@ char UnsCharCheck()
 
     char
         sign = '+',
-        c = 0,
         exp[4] = {};
+
+    char str[51];
 
     float
         val = 0,
@@ -219,81 +238,76 @@ char UnsCharCheck()
         expSize = 0;
 
         sign = '+';
-        c = 0;
         for (int i = 0; exp[i]; ++i)
             exp[i] = 0;
 
         val = 0;
 
         cout << "Enter float: ";
+        fgets(str, 51, stdin);
+        fflush(stdin);
 
-        do {
-            c = getchar();
+        if (str[0] == '0' && (str[1] != '\n' && str[1] != '.'))
+            errorFlag = true;
 
-            if (!errorFlag) {
-                if ((c >= '0' && c <= '9') ||
-                    c == 'e' || c == 'E' ||
-                    c == '+' || c == '-' || c == '.') {
+        if (str[0] == '\n' || str[0] == 'e' || str[0] == 'E')
+            errorFlag = true;
 
-                    if (c == '+' || c == '-') {
-                        if (expAppearanceFlag)
-                            sign = c;
-                        else
-                            errorFlag = true;
+        for (int i = 0; str[i] != '\n' && str[i] && !errorFlag; ++i) {
+            
+            if ((str[i] >= '0' && str[i] <= '9') ||
+                str[i] == 'e' || str[i] == 'E' ||
+                str[i] == '+' || str[i] == '-' || str[i] == '.') {
+
+                if ((str[i] == '+' || str[i] == '-') && !expAppearanceFlag)
+                        errorFlag = true;
+
+                if (expAppearanceFlag)
+                    expAppearanceFlag = false;
+
+                if (str[i] == '.') {
+                    if (!dotFlag)
+                        dotFlag = true;
+                    else
+                        errorFlag = true;
+                }
+
+                if (str[i] == 'e' || str[i] == 'E') {
+                    if (!expFlag) {
+                        expFlag = true;
+                        expAppearanceFlag = true;
                     }
+                    else
+                        errorFlag = true;
+                }
 
-                    if (expAppearanceFlag)
-                        expAppearanceFlag = false;
-
-                    if (c == '.') {
-                        if (!dotFlag)
-                            dotFlag = true;
-                        else
-                            errorFlag = true;
-                    }
-
-                    if (c == 'e' || c == 'E') {
-                        if (!expFlag) {
-                            expFlag = true;
-                            expAppearanceFlag = true;
-                        }
-                        else
-                            errorFlag = true;
-                    }
-
-                    if (c >= '0' && c <= '9') {
-                        if (expFlag) {
-                            if (exp[0] != '0' || expSize != 2 || c != '0') {
-                                exp[expSize++] = c;
-                                if (atoi(exp) + sizeBeforeDot > 39 || expSize > 2)
-                                    errorFlag = true;
-                            }
-                        }
-                        else if (dotFlag) {
-                            if (sizeAfterDot <= 7) {
-                                val += (degreeBeforeDot[sizeAfterDot] * (float)(c - '0'));
-                                ++sizeAfterDot;
-                            }
-                        }
-                        else if (!dotFlag) {
-                            ++sizeBeforeDot;
-                            if (sizeBeforeDot <= 39)
-                                val = val * 10.f + (float)(c - '0');
-                            else
+                if (str[i] >= '0' && str[i] <= '9') {
+                    if (expFlag) {
+                        if (exp[0] != '0' || expSize != 2 || str[i] != '0') {
+                            exp[expSize++] = str[i];
+                            if (atoi(exp) + sizeBeforeDot > 39 || expSize > 2)
                                 errorFlag = true;
                         }
                     }
-
-                    lineFlag = true;
-
+                    else if (dotFlag) {
+                        if (sizeAfterDot <= 9)
+                            ++sizeAfterDot;
+                        else
+                            errorFlag = true;
+                    }
+                    else if (!dotFlag) {
+                        ++sizeBeforeDot;
+                        if (sizeBeforeDot > 39)
+                            errorFlag = true;
+                    }
                 }
-                else if (c != '\n' || !lineFlag)
-                    errorFlag = true;
-            }
 
-        } while (c != '\n');
-        
-        if (!errorFlag) {
+                lineFlag = true;
+
+            }
+        }
+
+        /*if (!errorFlag) {
             if (exp[0]) {
                 int step = atoi(exp);
                 for (int i = 0; i < step; ++i) {
@@ -304,59 +318,55 @@ char UnsCharCheck()
             }
             else if (expFlag)
                 errorFlag = true;
+        }*/
+        
+        if (!errorFlag) {
+            val = (float)atof(str);
+            if (isinf(val) || isnan(val))
+                errorFlag = true;
         }
-        val = val;
+
         if (errorFlag)
             cout << "That input is invalid. Please try again." << endl;
 
     } while (errorFlag);
 
     return val;
-}*/
+}
 
 /*float getFloatValue() {
-    float val;
-    while (true) {
-        cout << "Enter a  value: ";
-        cin >> val;
-
-        if (cin.fail()) {
-            cin.clear();
-            cin.ignore(32767, '\n');
-            cout << "Oops, that input is invalid.  Please try again.\n";
-        }
-        else
-        {
-            std::cin.ignore(32767, '\n'); // удаляем лишние значения
-
-            return a;
-        }
-    }
-}*/
-
-float getFloatValue() {
     char str[51];
     bool flag;
     float val = 0;
-    int len = 0;
+    int
+        sizeBeforeDot,
+        sizeAfterDot,
+        len;
     do {
         val = 0;
         len = 0;
+        sizeBeforeDot = 0;
+        sizeAfterDot = 0;
         flag = false;
         fgets(str, 51, stdin);
         fflush(stdin);
-        for (int i = 0; str[i] != '\n'; ++i, ++len);
+        for (int i = 0; str[i] != '\n' && str[i]; ++i, ++len);
         str[len] = 0;
+        for (int i = 0; str[i] != '.' && str[i]; ++i, ++sizeBeforeDot);
+        for (int i = sizeBeforeDot; (str[i] != 'e' || str[i] != 'E') && str[i]; ++i, ++sizeAfterDot);
         fflush(stdin);
         if (len == 0) {
+            flag = true;
             cout << "You entered an empty string! Try again...";
             ClearStr();
         }
-        else if (len > 50) {
-            cout << "Entered string longer then need! Try again...";
+        else if (sizeBeforeDot > 38) {
+            flag = true;
+            cout << "MIN value is 1.175494351e-38, MAX value is 3.402823466e+38! Try again...";
             ClearStr();
         }
         else if (str[0] == '0' && (str[1] != '\n' && str[1] != '.')) {
+            flag = true;
             cout << "The integer part of a number cannot start from zero if this integer part is not zero! Try again...";
             ClearStr();
         }
@@ -377,7 +387,7 @@ float getFloatValue() {
                 if (!flag) {
                     val = (float)atof(str);
                     if (val == 0 || isinf(val)) {
-                        cout << "MIN value is 1.175494351e-38, MAX value is 3.402823466e+38";
+                        cout << "MIN value is 1.175494351e-38, MAX value is 3.402823466e+38! Try again...";
                         ClearStr();
                         flag = true;
                     }
@@ -387,28 +397,33 @@ float getFloatValue() {
     } while (flag);
 
     return val;
-}
+}*/
 
-bool getChoice() {
+bool getChoice(bool state) {
+    const char* message = (state) ? "What type of value do you need?\nEnter 0, if you need unsigned char, or 1, if you need float: " :
+        "Do you want repeat?\nEnter 1, if you want it, or 0, if not: ";
     char choice[3];
     bool flag;
     do {
+
         flag = false;
-        cout << "What type of value do you need?" << endl;
-        cout << "Enter 0, if unsigned char, or 1, if float: ";
+        cout << message;
         fgets(choice, 3, stdin);
         fflush(stdin);
+        system("cls");
+
         if (choice[0] == '\n') {
             flag = true;
             cout << "You entered an empty string! Try again...";
             ClearStr();
         }
-        else if (choice[2] != '\n' || (choice[1] != '0' && choice[1] != '1')) {
+        else if (choice[1] != '\n' || (choice[0] != '0' && choice[0] != '1')) {
             flag = true;
             cout << "That input is invalid! Try again...";
             ClearStr();
         }
-    } while(flag);
+
+    } while (flag);
 
     return (bool)(choice[0] - '0');
 }
@@ -416,20 +431,33 @@ bool getChoice() {
 int main() {
     unsigned char valUChar; // char value
     special_float valFloat; // float and int union value
-    bool state;             // user choice
+    float val;
+    bool
+        choice,
+        state;
+    do {
+        state = getChoice(1);    // user make choice
 
-    state = getChoice();    // user make choice
+        if (state) {
+            cin >> val;
+            getchar();
+            val = val;
+            valFloat.actual = getFloatValue();
+            valFloat.actual = valFloat.actual;
+            Print(state, valFloat.auxiliary);
+            ChangeBit(state, valFloat.auxiliary);
+        }
+        else {
+            valUChar = UnsCharCheck();
+            Print(state, 0, valUChar);
+            ChangeBit(state, 0, valUChar);
+        }
 
-    if (state) {
-        valFloat.actual = getFloatValue();      
-        Print(state, valFloat.auxiliary); 
-        ChangeBit(state, valFloat.auxiliary); 
-    }
-    else {
-        valUChar = UnsCharCheck();
-        Print(state, 0, valUChar);
-        ChangeBit(state, 0, valUChar);
-    }
+        choice = getChoice(0);
+
+    } while (choice);
 
     return 0;
 }
+
+// g++ lab1.cpp -std=c++11 -o test
